@@ -1,0 +1,148 @@
+#include "Game.h"
+#include "PacMan.h"
+#include "Settings.h"
+// privat
+void Game::initializeVariables()
+{
+    this->window = nullptr;
+    this->pacman = nullptr;
+    this->map_sketch = {
+        "###################",
+        "#........#........#",
+        "#.##.###.#.###.##.#",
+        "#.................#",
+        "#.##.#.#####.#.##.#",
+        "#....#...#...#....#",
+        "####.###.#.###.####",
+        "####.#.......#.####",
+        "####.#.##1##.#.####",
+        ".......#   #.......",
+        "####.#.#####.#.####",
+        "####.#.......#.####",
+        "####.#.#####.#.####",
+        "#........#........#",
+        "#.##.###.#.###.##.#",
+        "#..#...........#..#",
+        "##.#.#.#####.#.#.##",
+        "#....#...#...#....#",
+        "#.######.#.######.#",
+        "#.................#",
+        "###################",
+        
+    };
+    this->converted_sketch = {};// initialize the array with 0s
+    this->convert_sketch();
+
+}
+
+void Game::initWindow()
+{
+    this->videoMode.height = SCREEN_HEIGHT;
+    this->videoMode.width = SCREEN_WIDTH;
+    this->window = new sf::RenderWindow(this->videoMode, "PACMAN");
+    //this->window->setFramerateLimit(60);
+    // initialize Pacman
+    this->pacman = new PacMan(sf::Vector2<float>(100.f, 100.f), 0, 0, 30, 15, sf::Color(255, 255, 0, 255), 0.f);
+    this->pacman->createPoints();
+    
+}
+// public
+// Constructor and Destructor
+Game::Game()
+{
+    this->initializeVariables();
+    this->initWindow();
+}
+
+Game::~Game()
+{
+    delete this->window;
+    delete this->pacman;
+}
+
+//Accessors
+const bool Game::running() const
+{
+    return this->window->isOpen();
+}
+
+//Functions
+int Game::len() {
+    return (sizeof(this->map_sketch) / sizeof(this->map_sketch[0]));
+}
+void Game::events()
+{
+    while (this->window->pollEvent(this->ev))
+    {
+        switch (this->ev.type)
+        {
+        case sf::Event::Closed:
+            this->window->close();
+            break;
+        case sf::Event::KeyPressed:
+            if (this->ev.key.code == sf::Keyboard::Escape)
+                this->window->close();
+            break;
+        }
+
+    }
+}
+
+void Game::update(float dt)
+{
+    this->events();
+    this->pacman->update(dt);
+}
+
+void Game::draw()
+{
+    
+    this->window->clear(sf::Color(0, 0, 0, 255));
+
+    //Draw game objects
+    this->draw_map();
+    this->pacman->draw(*this->window);
+    
+
+    this->window->display();
+}
+
+void Game::draw_map() {
+    
+    for (int i = 0; i < MAP_WIDTH ; i++) {
+        for (int j = 0; j < MAP_HEIGHT ; j++) {
+            switch (this->converted_sketch[i][j]) {
+                case CELL::wall: {
+                    sf::RectangleShape rectangle;
+                    rectangle.setSize(sf::Vector2f(TILESIZE, TILESIZE));
+                    rectangle.setFillColor(sf::Color::Blue);
+                    rectangle.setPosition(i * TILESIZE, j * TILESIZE);
+                    this->window->draw(rectangle);
+                }
+            }
+            
+
+        }
+    }
+}
+
+void Game::convert_sketch() {
+    
+    for (int i = 0; i < MAP_HEIGHT ; i++) {
+        for (int j = 0; j < MAP_WIDTH ; j++) {
+            switch (this->map_sketch[i][j]) {
+                case '#':
+                {
+                    this->converted_sketch[j][i] = CELL::wall;
+                    break;
+                }
+                case ' ': 
+                {
+                    this->converted_sketch[j][i] = CELL::empty;
+                    break;
+                }
+            }
+
+        }
+    }
+}

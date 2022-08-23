@@ -1,0 +1,51 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include "Game.hpp"
+#include <chrono>
+#include <ctime>
+#include "Settings.hpp"
+int main()
+{
+    // New Game object
+    Game game;
+
+    //Used to make the game framerate-independent.
+    unsigned int lag = 0;
+
+    std::chrono::time_point<std::chrono::steady_clock> previous_time;
+
+    //Get the current time and store it in a variable.
+    previous_time = std::chrono::steady_clock::now();
+    
+    // time delta to pass to update and everything else needed to calculate it
+    float delta_time_update = 0.f;
+    while (game.running())
+    {
+        unsigned int delta_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - previous_time).count();
+        lag += delta_time;
+        
+        previous_time += std::chrono::microseconds(delta_time);
+        
+        // get the lag when it exceeds FRAME_DURATION to pass as difference of time between each frame
+        if (lag >= FRAME_DURATION) {
+            delta_time_update = (float)lag;
+        }
+        //While the lag exceeds the maximum allowed frame duration.
+        while (FRAME_DURATION <= lag) {
+            //We decrease the lag.
+            lag -= FRAME_DURATION;
+            //Update
+            game.update(delta_time_update/1000000);
+        }
+
+        //Draw
+        game.draw();
+        
+        
+
+
+    }
+
+    return 0;
+    
+}

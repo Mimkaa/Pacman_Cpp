@@ -1,0 +1,15 @@
+#pragma once
+constexpr int TILESIZE = 32;
+constexpr int MAP_WIDTH = 19;
+constexpr int MAP_HEIGHT = 21;
+constexpr short int  FRAME_DURATION = 16667;
+constexpr float  PACMANSPEED = 250.f;
+constexpr int SCREEN_WIDTH = MAP_WIDTH * TILESIZE;
+constexpr int SCREEN_HEIGHT = MAP_HEIGHT * TILESIZE;
+enum CELL {
+	door,
+	empty,
+	food,
+	wall,
+	energizer
+};

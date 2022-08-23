@@ -1,0 +1,41 @@
+#pragma once
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include "Game.h"
+#include "PacMan.h"
+#include <array>
+#include "Settings.h"
+class Game
+{
+private:
+	//variables
+	// Window
+	sf::RenderWindow* window;
+	sf::Event ev;
+	sf::VideoMode videoMode;
+	PacMan* pacman;
+	std::array<std::string, MAP_HEIGHT> map_sketch;
+	std::array<std::array<CELL, MAP_HEIGHT>,MAP_WIDTH> converted_sketch;
+	// privat functions
+	void initializeVariables();
+	void initWindow();
+public:
+	//Constructor
+	Game();
+
+	// Destructor
+	virtual ~Game();
+
+	// Accessors
+	const bool running() const;
+
+	//functions
+	void convert_sketch();
+	void draw_map();
+	void events();
+	void update(float dt);
+	void draw();
+	int len();
+};
+
+

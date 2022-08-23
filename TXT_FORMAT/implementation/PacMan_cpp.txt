@@ -1,0 +1,182 @@
+#include "PacMan.h"
+#include <iostream>
+#include "Settings.h"
+
+//Constructor and Destructor
+PacMan::PacMan(sf::Vector2<float> pos, int vec_UpperJaw,
+	int vec_LowerJaw, unsigned int numPoints, unsigned int rad, sf::Color col, float ang) {
+	this->position = pos;
+	this->LowerJawInd = vec_LowerJaw;
+	this->UpperJawInd = vec_UpperJaw;
+	this->nPoints = numPoints;
+	this->radius = rad;
+	this->color = col;
+	this->angle = ang;
+	this->nom_dir = 1;
+	this->last_update = 0;
+	this->current_time = 0;
+}
+
+PacMan::~PacMan(){
+}
+
+// Getters and Setters
+void PacMan::set_position(sf::Vector2<float> vec) {
+	this->position.x = vec.x;
+	this->position.y = vec.y;
+}
+
+//Functional
+
+bool PacMan::FloatComp(float a, float b, float epsilon) {
+	return fabs(a - b) < epsilon;
+}
+
+
+void PacMan::createPoints() {
+	float fTheta = 3.14159f * 2.0f / (float)this->nPoints;
+	for (int i = 0; i < this->nPoints; i++) {
+		this->original.push_back({ this->radius * cos(fTheta * i), this->radius * sin(fTheta * i) });
+		this->transformed.push_back({ this->radius * cos(fTheta * i), this->radius * sin(fTheta * i) });
+	}
+}
+
+void PacMan::animate() {
+	std::vector<sf::Vector2<float>> trs_copy(this->transformed);
+	this->drawable = trs_copy;
+	// move jaws
+	this->current_time += 1;
+	if (this->current_time - this->last_update > 2) {
+		this->last_update = this->current_time;
+		this->LowerJawInd += 1 * this->nom_dir;
+		this->UpperJawInd -= 1 * this->nom_dir;
+		this->UpperJawInd = (this->UpperJawInd + this->transformed.size()) % this->transformed.size();
+	}
+
+	if (this->LowerJawInd > transformed.size() / 4 - 1  || this->LowerJawInd == 0) {
+		this->nom_dir *= -1;
+	}
+	// pop vectors to draw a concave polygon
+	
+	if (this->LowerJawInd > 0) {
+		
+		int drawable_length = this->drawable.size();
+		// appending vectors that we want to pop
+		std::vector<int> to_erase;
+		for (int i = 1; i < this->LowerJawInd; i++) {
+			to_erase.push_back(i);
+			to_erase.push_back((this->drawable.size() - 1) - i );
+			/*std::cout << i << std::endl;
+			std::cout << (this->drawable.size() - 1) - i << std::endl;*/
+		}
+		//remove vectors from drawable by indecies we recorded in to_erase
+		std::vector<sf::Vector2<float>> new_drawable;
+		if (!to_erase.empty()) {
+
+			for (int i = 0; i < this->drawable.size() - 1; i++) {
+				bool in_erase = false;
+				for (int j = 0; j < to_erase.size() - 1; j++) {
+					if (i == to_erase[j]) {
+						in_erase = true;
+					}
+					
+				}
+				if (!in_erase) {
+					new_drawable.push_back(this->drawable[i]);
+				}
+			}
+
+			this->drawable = new_drawable;
+			
+		}
+		// adjust jaw notch
+		if (this->LowerJawInd > 0) {
+			this->drawable[0] = this->position;
+		}
+		else {
+			this->drawable[0] = this->transformed[0];
+		}
+	}
+	
+	
+	
+}
+
+void PacMan::get_keys() {
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+	{
+		this->angle = 3.14159;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+	{
+		this->angle = 0;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+	{
+		this->angle = 4.71239;
+	}
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+	{
+		this->angle = 1.5708;
+	}
+}
+
+void PacMan::move(float dt) {
+	float x = floor(cosf(this->angle) + 0.5);
+	float y = floor(sinf(this->angle) + 0.5);
+	x *= PACMANSPEED * dt;
+	y *= PACMANSPEED * dt;
+	this->position += sf::Vector2<float>(x, y);
+
+
+}
+
+void PacMan::wrap_around() {
+	if (this->position.x > SCREEN_WIDTH) {
+		this->position.x = 0;
+	}
+	else if (this->position.x < 0) {
+		this->position.x = SCREEN_WIDTH;
+	}
+	if (this->position.y > SCREEN_HEIGHT) {
+		this->position.y = 0;
+	}
+	else if (this->position.y < 0) {
+		this->position.y = SCREEN_HEIGHT;
+	}
+
+}
+
+void PacMan::update(float dt) {
+	this->get_keys();
+	// tansform in world space
+	for (int i = 0; i < this->nPoints; i++) {
+		this->transformed[i] = {
+			(this->original[i].x * cosf(this->angle)) - (this->original[i].y * sinf(this->angle)) + this->position.x,
+			(this->original[i].x * sinf(this->angle)) + (this->original[i].y * cosf(this->angle)) + this->position.y,
+		};
+	}
+	this->animate();
+	this->move(dt);
+	this->wrap_around();
+	
+	
+
+
+
+}
+
+void PacMan::draw(sf::RenderWindow& i_window) {
+	sf::ConvexShape polygon;
+
+	polygon.setPointCount(this->drawable.size());
+	for (int i = 0; i < this->drawable.size(); i++)
+	{
+		polygon.setPoint(i, this->drawable[i] );
+	}
+	polygon.setFillColor(this->color);
+	
+	
+	i_window.draw(polygon);
+	
+}
