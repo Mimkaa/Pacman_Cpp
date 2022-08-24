@@ -1,4 +1,4 @@
-## PacMan in C++
+## PacMan in C++(SFML)
 ### wont lie at first after python coding in c++  was a pure suffering but in 3 days or so of getting used to it I kinda starter enjoing coding with it.
 
 # Features:
